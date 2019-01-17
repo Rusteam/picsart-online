@@ -1,51 +1,34 @@
-PicsArt AI Hackathon Online
-===========================
+# Image Segmentation Model in Keras
 
-Материалы к онлайн этапу [PicsArt AI Hackathon](https://picsart.ai/).
+``Goal:`` to build a semantic segmentation model to separate background from a human in an image for the [PicsArt-online hack](https://picsart.ai/en/picsartaidays).
 
-## Постановка задачи
+``Result:`` landed in top-65 out of more than 110 teams. Recieved a final dice score of 0.966 on submission.
 
-Участникам соревнования предлагается решить задачу отделения человека на фотографии от фона. По изображению необходимо построить бинарную маску, в которой указать пиксели относящиеся к человеку. Пример масок сегментации:
+### Data
 
-![](data/example_images.png)
+The host provided a dataset with real images and their binary masks encoded as rle ([download here](https://s3.eu-central-1.amazonaws.com/datasouls/public/picsart_hack_online_data.zip)).
+There were 1491 training samples.
 
+##### Submission
+For submission 2177 real images were provided. 
 
-## Набор данных
+##### Unpacking
+Unzip the downloaded archive into _data_ directory for training
 
-Ссылка на набор изображений: [picsart_hack_online_data.zip](https://bucketeer-db1966c9-c9f8-427d-ae61-659a91a9fca7.s3.amazonaws.com/public/picsart_hack_online_data.zip)
+##### Samples
+![alt text]('./example-images.png')
 
-Для обучения моделей предоставляется выборка из ≈1500 размеченных картинок (каталог `train`) и масок сегментации (каталог `train_mask`). Маски представляю собой одноканальные изображения той же размерности, что и исходные изображения, и имеют только два значения цвета. Для оценки решений предоставляется тестовая выборка без соотвествующих масок (каталог `test`).
+### Training
 
+##### Model Architecture
+A regular U-Net architecture was chosen for this task. It had 5 encoding blocks as convolutional layers with batchnorm and relu activation + max pooling + dropout. They were followed by 4 blocks of upsampling convlution and finished by 2 convolutions targeted to reduce the channels size.
 
-## Формат решения
+##### Optimization
+[Dice coefficient](https://en.wikipedia.org/wiki/S%C3%B8rensen%E2%80%93Dice_coefficient) was selected as a loss function and scoring metrics as per the host's problem description.
+Adagrad was finally selected as it performed better than Adam and RMSProp.
+Model was trained for about 100 epochs with batch size of 16 on a single Tesla P100 gpu.
+Validation score exceeded 0.95 whereas submission score reached 0.966.
 
-В качестве решения необходимо построить разметку всех изображений из каталога `test`. 
-
-Маски необходимо закодировать в формате [run-length encoding](https://en.wikipedia.org/wiki/Run-length_encoding) (RLE) и записать в CSV-файл. Формат RLE заключается в том что в строчку последовательно записываются пары чисел: номер стартового пикселя и число последовательно идущих пикселей, относящихся к маске. Например: '1 3 10 5' означает что маска состоит из пикселей с индексами 1,2,3,10,11,12,13,14. Пары должны быть отсортированы по возрастанию стартового пикселя, не должны пересекаться. Нумерация пикселей происходит c 1, сверху вних, затем слева направо: 1 означает пиксель (1,1), 2 — (2,1) и т.д.
-
-Код для кодирования и декодирования формата RLE можно найти в [utils.py](./utils.py).
-
-В проверяющую систему необходимо отправить файл с предсказаниями в формате `csv`, содержащий следующие колонки:
-- `image` — номер изображения, указанный в имени файла (например, 11150)
-- `rle_mask` — построенная маска, закодированная при помощи run-length encoding
-
-Пример файла решения: [sample_submission.csv](https://bucketeer-db1966c9-c9f8-427d-ae61-659a91a9fca7.s3.amazonaws.com/public/picsart_hack_online_sample_submission.csv)
-
-
-## Система оценки
-
-Качество сегментации для каждого изображения оценивается с помощью [Dice Score](https://en.wikipedia.org/wiki/Sørensen–Dice_coefficient):
-
-![$$\frac{2 \cdot |X \cap Y|}{|X| + |Y|}$$](https://latex.codecogs.com/gif.latex?\frac{2&space;\cdot&space;|X&space;\cap&space;Y|}{|X|&space;&plus;&space;|Y|})
-
-где X — предсказанная маска, Y — правильная маска из разметки, |X| — число пикселей, попавших в маску X.
-
-Dice Score усредняется по всем тестовым изоражениям, имеющим разметку.
-
-Функции для вычисления качества можно найти в [utils.py](./utils.py).
-
-
-## Пример решения
-
-Пример решения приведен в [Jupyter Notebook](https://jupyter.org)-е [PicsartHack_Baseline.ipynb](PicsartHack_Baseline.ipynb)
-
+##### Thresholding
+Ensembling a few bet performing results didn't yield results better than 1 best model.
+Threshold was selected on a validation set to maximize accuracy.

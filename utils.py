@@ -25,6 +25,7 @@ def rle_encode(img):
 
     from: https://www.kaggle.com/kmader/baseline-u-net-model-part-1
     '''
+ 
     pixels = img.flatten()
     pixels = np.concatenate([[0], pixels, [0]])
     runs = np.where(pixels[1:] != pixels[:-1])[0] + 1
