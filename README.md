@@ -16,7 +16,7 @@ For submission 2177 real images were provided.
 Unzip the downloaded archive into _data_ directory for training
 
 ##### Samples
-![alt text](./example-images.png)
+![alt text](./example_images.png)
 
 ### Training
 
