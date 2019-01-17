@@ -1,6 +1,6 @@
 # Image Segmentation Model in Keras
-
 Nov 30, 2018
+
 ---
 
 ``Goal:`` to build a semantic segmentation model to separate background from a human in an image for the [PicsArt-online hack](https://picsart.ai/en/picsartaidays).
